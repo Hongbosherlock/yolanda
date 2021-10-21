@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
     struct pollfd event_set[INIT_SIZE];
     event_set[0].fd = listen_fd;
     event_set[0].events = POLLRDNORM;
+    //系统内核检测 listen_fd 上的连接建立完成事件。
 
     // 用-1表示这个数组位置还没有被占用
     int i;
@@ -24,14 +25,16 @@ int main(int argc, char **argv) {
 
     for (;;) {
         if ((ready_number = poll(event_set, INIT_SIZE, -1)) < 0) {
+            //timeout 设置为 -1，表示在 I/O 事件发生之前 poll 调用一直阻塞。
             error(1, errno, "poll failed ");
         }
 
         if (event_set[0].revents & POLLRDNORM) {
+            // event 都是通过二进制位来进行记录的，位与操作是和对应的二进制位进行操作，一个文件描述字是可以对应到多个事件类型的。
             socklen_t client_len = sizeof(client_addr);
             connected_fd = accept(listen_fd, (struct sockaddr *) &client_addr, &client_len);
 
-            //找到一个可以记录该连接套接字的位置
+            //找到一个可以记录该连接套接字的位置,把连接描述字 connect_fd 也加入到 event_set 里
             for (i = 1; i < INIT_SIZE; i++) {
                 if (event_set[i].fd < 0) {
                     event_set[i].fd = connected_fd;
@@ -48,6 +51,7 @@ int main(int argc, char **argv) {
                 continue;
         }
 
+        //查看 event_set 里面其他的事件，也就是 connected_fd 的可读事件。
         for (i = 1; i < INIT_SIZE; i++) {
             int socket_fd;
             if ((socket_fd = event_set[i].fd) < 0)
@@ -60,6 +64,7 @@ int main(int argc, char **argv) {
                 } else if (n == 0 || errno == ECONNRESET) {
                     close(socket_fd);
                     event_set[i].fd = -1;
+                    //把 event_set 对应的 pollfd 重置
                 } else {
                     error(1, errno, "read error");
                 }

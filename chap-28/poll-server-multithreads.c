@@ -51,7 +51,7 @@ int main(int c, char **v) {
     //初始化acceptor
     struct acceptor *acceptor = acceptor_init(SERV_PORT);
 
-    //初始tcp_server，可以指定线程数目，这里线程是4，说明是一个acceptor线程，4个I/O线程，没一个I/O线程
+    //初始tcp_server，可以指定线程数目，这里线程是4，说明是一个acceptor线程，4个I/O线程，每一个I/O线程
     //tcp_server自己带一个event_loop
     struct TCPserver *tcpServer = tcp_server_init(eventLoop, acceptor, onConnectionCompleted, onMessage,
                                                   onWriteCompleted, onConnectionClosed, 4);

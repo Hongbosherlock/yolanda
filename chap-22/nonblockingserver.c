@@ -139,14 +139,17 @@ int main(int argc, char **argv) {
             printf("listening socket readable\n");
             sleep(5);
             struct sockaddr_storage ss;
+            // sockaddr_storage 一种通用结构体
             socklen_t slen = sizeof(ss);
             int fd = accept(listen_fd, (struct sockaddr *) &ss, &slen);
+            //accept 成功时返回一个新的连接 socket
             if (fd < 0) {
                 error(1, errno, "accept failed");
             } else if (fd > FD_INIT_SIZE) {
                 error(1, 0, "too many connections");
                 close(fd);
             } else {
+                // accept 成功
                 make_nonblocking(fd);
                 if (buffer[fd]->connect_fd == 0) {
                     buffer[fd]->connect_fd = fd;

@@ -24,12 +24,18 @@ struct event_loop {
     struct channel_map *channelMap;
 
     int is_handle_pending;
+    //保留在子线程内的需要处理的新的事件
     struct channel_element *pending_head;
     struct channel_element *pending_tail;
 
-    pthread_t owner_thread_id;
+    //每个 event loop 的线程 ID
+    pthread_t owner_thread_id; 
+
+    //线程同步  
     pthread_mutex_t mutex;
     pthread_cond_t cond;
+
+    //父线程用来通知子线程有新的事件需要处理
     int socketPair[2];
     char *thread_name;
 };

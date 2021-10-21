@@ -22,12 +22,15 @@ int main(int argc, char **argv) {
     listen_fd = tcp_nonblocking_server_listen(SERV_PORT);
 
     efd = epoll_create1(0);
+    //调用 epoll_create0 创建了一个 epoll 实例。
+
     if (efd == -1) {
         error(1, errno, "epoll create failed");
     }
 
     event.data.fd = listen_fd;
     event.events = EPOLLIN | EPOLLET;
+    //调用 epoll_ctl 将监听套接字对应的 I/O 事件进行了注册
     if (epoll_ctl(efd, EPOLL_CTL_ADD, listen_fd, &event) == -1) {
         error(1, errno, "epoll_ctl add listen fd failed");
     }
@@ -55,12 +58,14 @@ int main(int argc, char **argv) {
                     make_nonblocking(fd);
                     event.data.fd = fd;
                     event.events = EPOLLIN | EPOLLET; //edge-triggered
+                    //调用 epoll_ctl 把已连接套接字对应的可读事件注册到 epoll 实例中
                     if (epoll_ctl(efd, EPOLL_CTL_ADD, fd, &event) == -1) {
                         error(1, errno, "epoll_ctl add connection fd failed");
                     }
                 }
                 continue;
             } else {
+                //处理了已连接套接字上的可读事件，读取字节流，编码后再回应给客户端。
                 socket_fd = events[i].data.fd;
                 printf("get event on socket fd == %d \n", socket_fd);
                 while (1) {
@@ -75,6 +80,7 @@ int main(int argc, char **argv) {
                         close(socket_fd);
                         break;
                     } else {
+                        // n > 0
                         for (i = 0; i < n; ++i) {
                             buf[i] = rot13_char(buf[i]);
                         }
